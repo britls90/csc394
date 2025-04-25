@@ -62,10 +62,14 @@ SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 Base = declarative_base()
 
 # ---------- SQLAlchemy Model ----------
-class ItemsDB(Base):
-    __tablename__ = "items"
+
+class TermDB(Base):
+    __tablename__ = "terms"
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
+    name = Column(String)
+    price = Column(String)  
+    brand = Column(String)
+    location = Column(String)
 
 Base.metadata.create_all(bind=engine)
 
@@ -74,30 +78,49 @@ Base.metadata.create_all(bind=engine)
 @app.post("/terms/", response_model=Term)
 def create_term(term: Term):
     with SessionLocal() as session:
-        db_term = TermDB(**Term.dict())
+        db_term = TermDB(**term.dict())
         session.add(db_term)
         session.commit()
         session.refresh(db_term)
-        return db_term
+        return term  # or use: Term.from_orm(db_term)
 
-@app.delete("/terms", response_model=Term)
+
+# @app.delete("/terms", response_model=Term)
+# def delete_term(term_id: int):
+#     with SessionLocal() as session:
+#         term = session.query(TermDB).filter(TermDB.id == term_id).first()
+#         if not term:
+#             raise HTTPException(status_code=404, detail="Item not found")
+#         session.delete(term)
+#         session.commit()
+#         return term
+    
+@app.delete("/terms/{term_id}", response_model=Term)
 def delete_term(term_id: int):
     with SessionLocal() as session:
-        term = session.query(TermDB).filter(TermDB.id == term_id).first()
-        if not term:
+        term_db = session.query(TermDB).filter(TermDB.id == term_id).first()
+        if not term_db:
             raise HTTPException(status_code=404, detail="Item not found")
-        session.delete(term)
+        session.delete(term_db)
         session.commit()
-        return term
+        return Term.from_orm(term_db)
+
 
 
 @app.get("/brands", response_model=List[Brand])
 def get_brands():
     return brands
 
+# @app.get("/terms", response_model=List[Term])
+# def get_terms():
+#     return terms
+
 @app.get("/terms", response_model=List[Term])
 def get_terms():
-    return terms
+    with SessionLocal() as session:
+        db_terms = session.query(TermDB).all()
+        return [Term.from_orm(t) for t in db_terms]
+
 
 @app.get("/locations", response_model=List[Location])
 def get_locations():
