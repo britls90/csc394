@@ -1,3 +1,3 @@
-# CSC-399-Team-2
-CSC 394 Final Project
-Market Basket tracks various items at grocery stores locations and allows the user to compare item prices across different stores and regions.
+# CSC-394-Team-2
+This is my CSC 394 Final Project personal repo.
+Market Basket tracks various items at Kroger grocery store locations and allows the user to compare item prices.
